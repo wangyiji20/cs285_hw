@@ -55,7 +55,7 @@ def build_mlp(
     for i in range(2,n_layers+1):
       layers[f'lin{i}']=nn.Linear(size,size)
       layers[f'av{i}']=activation
-    layers[f'lin{n_layers+1}']=nn.Linear(size,outpu_size)
+    layers[f'lin{n_layers+1}']=nn.Linear(size,output_size)
     layers[f'av{n_layers+1}']=output_activation
     return nn.Sequential(layers)
 device = None

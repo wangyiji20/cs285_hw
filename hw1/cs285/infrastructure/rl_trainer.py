@@ -2,7 +2,11 @@ from collections import OrderedDict
 import numpy as np
 import time
 import pickle
-
+from pyvirtualdisplay import Display
+from cs285.infrastructure.colab_utils import (
+    wrap_env,
+    show_video
+) 
 import gym
 import torch
 
@@ -71,6 +75,19 @@ class RL_Trainer(object):
         agent_class = self.params['agent_class']
         self.agent = agent_class(self.env, self.params['agent_params'])
 
+    def show_video(self):
+      display = Display(visible=0, size=(1400, 900))
+      display.start()
+      env=wrap_env(self.env)
+      
+      ob = env.reset()
+      for i in range(self.params['ep_len']):
+        env.render(mode='rgb_array')
+        ac=self.agent.actor.get_action(ob)
+        ob,_,_,_=env.step(ac)
+      env.close()
+      show_video
+
     def run_training_loop(self, n_iter, collect_policy, eval_policy,
                         initial_expertdata=None, relabel_with_expert=False,
                         start_relabel_with_expert=1, expert_policy=None):
@@ -121,7 +138,7 @@ class RL_Trainer(object):
 
             # train agent (using sampled data from replay buffer)
             training_logs = self.train_agent()  # HW1: implement this function below
-
+            self.env.render(mode='rgb_array')
             # log/save
             if self.log_video or self.log_metrics:
 
@@ -205,7 +222,7 @@ class RL_Trainer(object):
         # DONE TODO relabel collected obsevations (from our policy) with labels from an expert policy
         # HINT: query the policy (using the get_action function) with paths[i]["observation"]
         # and replace paths[i]["action"] with these expert labels
-        for i in len(paths):
+        for i in range(len(paths)):
           paths[i]["action"]=expert_policy.get_action(paths[i]["observation"])
         return paths
 

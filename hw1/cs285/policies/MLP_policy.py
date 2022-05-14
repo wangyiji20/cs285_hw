@@ -61,6 +61,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             self.logstd = nn.Parameter(
                 torch.zeros(self.ac_dim, dtype=torch.float32, device=ptu.device)
             )
+            #使logstd成为待学习的参数
             self.logstd.to(ptu.device)
             self.optimizer = optim.Adam(
                 itertools.chain([self.logstd], self.mean_net.parameters()),
@@ -80,7 +81,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         else:
             observation = obs[None]
         #DONE TODO return the action that the policy prescribes
-        return ptu.to_numpy(self.forward(ptu.from_numpy(observation)))
+        return ptu.to_numpy(self.forward(ptu.from_numpy(observation)).sample())
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -93,9 +94,10 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
       if self.discrete:
-        return self.logits_na(observation)
+        return torch.distributions.Categorical(self.logits_na(observation))
       else:
-        return self.mean_net(observation)
+        return torch.Normal(self.mean_net(observation),torch.exp(self.logstd))
+        #Normal是几个不相关的一维高斯分布，Mulivariate是多维
       #raise NotImplementedError
 
 
